@@ -1,28 +1,36 @@
 <template>
-  <div
-    class="task"
-    draggable="true"
-    @dragstart="pickupTask($event, taskIndex, columnIndex)"
-    @click="goToTask(task)"
-    @dragover.prevent
-    @dragenter.prevent
-    @drop.stop="moveTaskOrColumn($event, column.tasks, columnIndex, taskIndex)"
+  <AppDrop
+    @drop="moveTaskOrColumn"
   >
-    <span class="w-full flex-no-shrink font-bold">
-      {{ task.name }}
-    </span>
-    <p class="w-full flex-no-shrink mt-1 text-sm" v-if="task.description">
-      {{ task.description }}
-    </p>
-  </div>
+    <AppDrag
+      class="task"
+      :transferData="{
+        type: 'task',
+        fromColumnIndex: columnIndex,
+        fromTaskIndex: taskIndex
+      }"
+      @click.native="goToTask(task)"
+    >
+      <span class="w-full flex-no-shrink font-bold">
+        {{ task.name }}
+      </span>
+      <p
+        v-if="task.description"
+        class="w-full flex-no-shrink mt-1 text-sm"
+      >
+        {{ task.description }}
+      </p>
+    </AppDrag>
+  </AppDrop>
 </template>
 
 <script>
-import movingTasksAndColumnsMixins from '@/mixins/movingTasksAndColumnsMixins'
+import movingTasksAndColumnsMixin from '@/mixins/movingTasksAndColumnsMixins'
+import AppDrag from './AppDrag'
+import AppDrop from './AppDrop'
 export default {
-  mixins: [
-    movingTasksAndColumnsMixins
-  ],
+  components: { AppDrag, AppDrop },
+  mixins: [movingTasksAndColumnsMixin],
   props: {
     task: {
       type: Object,
@@ -30,17 +38,10 @@ export default {
     },
     taskIndex: {
       type: Number,
-      require: true
+      required: true
     }
   },
   methods: {
-    pickupTask (e, fromTaskIndex, fromColumnIndex) {
-      e.dataTransfer.effectAllowed = 'move'
-      e.dataTransfer.dropEffect = 'move'
-      e.dataTransfer.setData('from-task-index', fromTaskIndex)
-      e.dataTransfer.setData('from-column-index', fromColumnIndex)
-      e.dataTransfer.setData('type', 'task')
-    },
     goToTask (task) {
       this.$router.push({ name: 'task', params: { id: task.id } })
     }
